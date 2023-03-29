@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import autores from "../models/Autor.js";
 
 class AutorController {
@@ -13,9 +14,21 @@ class AutorController {
     try {
       const id = req.params.id;
       const autoresResultado = await autores.findById(id);
-      res.status(200).send(autoresResultado);
+      if (autoresResultado !== null) {
+        res.status(200).send(autoresResultado);
+      } else {
+        res.status(404).send({ message: "Id do Autor não localizado." });
+      }
     } catch (erro) {
-      res.status(400).send({ message: `${erro.message} - Id não localizada` });
+      if (erro instanceof mongoose.Error.CastError) {
+        res
+          .status(400)
+          .send({ message: "Um ou mais dados fornecidos estão incorretos." });
+      } else {
+        res
+          .status(500)
+          .send({ message: `${erro.message} - Erro interno de servidor.` });
+      }
     }
   };
   static cadstrarArautor = async (req, res) => {
@@ -46,13 +59,6 @@ class AutorController {
     } catch (erro) {
       res.status(500).send({ message: erro.message });
     }
-    autores.findByIdAndDelete(id, (err) => {
-      if (!err) {
-        res.status(200).send({ message: "autor removido com sucesso!" });
-      } else {
-        res.status(500).send({ message: err.message });
-      }
-    });
   };
 }
 
